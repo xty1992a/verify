@@ -45,6 +45,12 @@ const dftOptions = {
 
 export default class Drawer extends EmitAble {
   positionList = []
+  hitPoints = []
+  expectText = ''
+
+  get completeText() {
+	return this.hitPoints.map(it => it.text).join('')
+  }
 
   constructor(opt) {
 	super();
@@ -61,6 +67,7 @@ export default class Drawer extends EmitAble {
   init() {
 	let {el} = this.$options
 	el.appendChild(this.createCanvas())
+	this.$cvs.addEventListener('click', this.down)
   }
 
   createCanvas() {
@@ -74,7 +81,8 @@ export default class Drawer extends EmitAble {
 	return canvas
   }
 
-  async draw(text, bgImage = this.$options.bgImage) {
+  async draw(text, bgImage = this.$options.bgImage, expectText = '') {
+	this.expectText = expectText
 	let {ctx} = this
 	let {width, height} = this.$cvs
 	let img = await this.createImage(bgImage)
@@ -125,37 +133,39 @@ export default class Drawer extends EmitAble {
   }
 
   getOffset() {
-	this.elRect = this.$el.getBoundingClientRect()
+	this.elRect = this.$cvs.getBoundingClientRect()
+  }
+
+  getPosition(e) {
+	let point = e.changedTouches ? e.changedTouches[0] : e
+
+	let {left, top} = this.elRect
+	let {clientX, clientY} = point
+	let x = (clientX - left)
+	let y = (clientY - top)
+	return {x, y}
+  }
+
+  getHitPoint(point) {
+	return getHitPoint(point, this.positionList)
   }
 
   down = e => {
 	this.mouseHadDown = true
 	this.getOffset()
 	let {x, y} = this.getPosition(e)
-	this.hitPoint = this.getHitPoint({x, y}) || null
-	this.points.forEach(it => it.hasOwnProperty('show') && (it.show = false))
-	if (this.hitPoint) {
-	  this.fire('hit', this.hitPoint)
+	let hitPoint = this.getHitPoint({x, y}) || null
+	if (hitPoint) {
+	  console.log(hitPoint)
+	  if (this.hitPoints.includes(hitPoint)) {
+		return
+	  }
+	  this.hitPoints.push(hitPoint)
 	}
-	else {
-	  this.points.forEach(it => it.hasOwnProperty('show') && (it.show = false))
+
+	if (this.completeText.length === this.expectText.length) {
+	  this.fire('complete', this.completeText === this.expectText)
 	}
-  }
-
-  move = e => {
-	if (!this.mouseHadDown) return
-	let {x, y} = this.getPosition(e)
-
-	if (this.hitPoint) {
-	  this.fire('move', {x, y})
-	}
-  }
-
-  up = e => {
-	if (!this.mouseHadDown) return
-	this.mouseHadDown = false
-	this.hitPoint = null
-	this.fire('over')
   }
 
 }

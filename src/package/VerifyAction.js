@@ -9,17 +9,28 @@ export class VerifyAction extends Component {
 	super(props);
   }
 
+  createDrawer() {
+	this.drawer = new Drawer({
+	  el: this._cvs_wrap,
+	})
+
+	this.drawer.on('complete', flag => {
+	  console.log('complete', flag)
+	})
+  }
+
+  freshDrawer() {
+	this.props.getCodeAsync(res => {
+	  console.log(res)
+	  this.drawer.draw(res.text, res.img, res.expectText)
+	})
+  }
+
   componentDidMount() {
 	setTimeout(() => {
 	  this._action.show();
-	  this.drawer = new Drawer({
-		el: this._cvs_wrap,
-	  })
-	  console.log(this.props)
-	  this.props.getCodeAsync(res => {
-		console.log(res)
-		this.drawer.draw(res.text, res.img)
-	  })
+	  this.createDrawer()
+	  this.freshDrawer()
 	}, 20);
   }
 

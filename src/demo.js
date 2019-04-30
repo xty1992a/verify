@@ -16,9 +16,12 @@ const ranger = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
 document.getElementById('btn').addEventListener('click', function () {
   Verify({
 	getCodeAsync(callback) {
+	  let text = ranger(1000, 9999) + '';
+
 	  callback({
-		text: ranger(1000, 9999) + '',
+		text,
 		img: '/static/2.png',
+		expectText: text.split('').reverse().join(''),
 	  })
 	},
   })
