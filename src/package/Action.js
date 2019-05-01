@@ -26,11 +26,12 @@ export default class Action extends Component {
 	this.props.onHide && this.props.onHide();
   }
 
-  close() {
+  close(callback) {
 	this.hide();
 	setTimeout(() => {
 	  let el = this.base;
 	  if (!el) return
+	  callback && callback()
 	  render(null, el.parentNode, el);
 	  el && el.parentNode && el.parentNode.removeChild(el);
 	}, 320);
@@ -46,7 +47,8 @@ export default class Action extends Component {
   }
 
   render() {
-	return (<div className={`action-container ${this.props.className || ''}`} onMouseWheel={this.stopMove.bind(this)} onTouchMove={this.stopMove.bind(this)}>
+	return (<div className={`action-container ${this.props.className || ''}`} onMouseWheel={this.stopMove.bind(this)}
+				 onTouchMove={this.stopMove.bind(this)}>
 	  <div className={this.state.show ? 'action action__show' : 'action'}>
 		<div className="action-model mask" onClick={this.cancel}/>
 		<div className={`action-${this.props.position || 'center'}`}>

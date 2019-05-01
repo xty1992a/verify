@@ -1,7 +1,7 @@
 {
   "name": "@redbuck/verify",
-  "version": "0.1.14",
-  "description": "crop image and upload",
+  "version": "0.0.1",
+  "description": "robot verify",
   "main": "lib/verify.js",
   "unpkg": "lib/verify.js",
   "scripts": {

@@ -1,3 +1,5 @@
+import {fresh} from './fresh'
+
 // 一个点是否命中一个点列表中的某一个
 // 抽象为,一个点是否命中一个圆-->抽象为平面坐标中两点距离(点是否命中圆即点与圆心的距离是否小于圆半径)
 const getHitPoint = (point, points) => points.find(it => Math.sqrt(Math.pow(it.x - point.x, 2) + Math.pow(it.y - point.y, 2)) < it.r)
@@ -81,18 +83,46 @@ export default class Drawer extends EmitAble {
 	return canvas
   }
 
+  createIcon() {
+	const img = new Image()
+	img.src = fresh
+	let {ctx} = this
+	let {x, y, r} = this.iconPoint
+	img.onload = () => {
+	  ctx.save()
+	  ctx.beginPath()
+	  ctx.fillStyle = '#fff'
+	  ctx.arc(x, y, r, 0, 2 * Math.PI)
+	  ctx.closePath()
+	  ctx.fill()
+	  ctx.drawImage(img, x - 8, y - 8, 2 * r, 2 * r)
+	  ctx.restore()
+	}
+  }
+
   async draw(text, bgImage = this.$options.bgImage, expectText = '') {
 	this.expectText = expectText
+	this.hitPoints = []
 	let {ctx} = this
 	let {width, height} = this.$cvs
+
+	this.iconPoint = {
+	  x: width - 22,
+	  y: 18,
+	  r: 8
+	}
+
 	let img = await this.createImage(bgImage)
 	ctx.clearRect(0, 0, width, height)
 	ctx.drawImage(img, 0, 0, width, height)
-	let len = 0
-	while (len < text.length) {
+	ctx.font = '16px Arial'
+	ctx.fillStyle = '#fff'
+	// ctx.fillText('a', 0, 10)
+	let len = text.length
+	while (len--) {
 	  this.drawText(text[len])
-	  len++
 	}
+	this.createIcon()
   }
 
   createImage(src) {
@@ -112,7 +142,30 @@ export default class Drawer extends EmitAble {
 	ctx.save()
 	ctx.font = text.r * 2 + 'px Arial';
 	ctx.fillStyle = text.color;
+	ctx.textAlign = 'center'
+	ctx.textBaseline = 'middle'
 	ctx.fillText(text.text, text.x, text.y)
+	// ctx.beginPath()
+	// ctx.arc(text.x, text.y, text.r, 0, 2 * Math.PI);
+	// ctx.closePath()
+	// ctx.stroke()
+	ctx.restore()
+  }
+
+  drawHitMark({index, x, y}) {
+	let {ctx} = this
+	ctx.save()
+	ctx.beginPath()
+	ctx.arc(x, y, 8, 0, 2 * Math.PI)
+	ctx.closePath()
+	ctx.fillStyle = '#00c8ff'
+	ctx.fill()
+	ctx.textAlign = 'center'
+	ctx.textBaseline = 'middle'
+
+	ctx.fillStyle = '#001d26'
+	ctx.font = '12px Arial'
+	ctx.fillText(index + '', x, y)
 	ctx.restore()
   }
 
@@ -120,11 +173,11 @@ export default class Drawer extends EmitAble {
 	let {width, height} = this.$cvs
 	let text = new Text({
 	  text: str,
-	  x: ranger(0, width),
-	  y: ranger(0, height),
+	  x: ranger(8, width - 8),
+	  y: ranger(8, height - 8),
 	  color: color16(),
 	})
-	let item = getHitPoint(text, this.positionList)
+	let item = getHitPoint(text, [...this.positionList, this.iconPoint])
 	if (item) {
 	  return this.createText(str)
 	}
@@ -150,21 +203,35 @@ export default class Drawer extends EmitAble {
 	return getHitPoint(point, this.positionList)
   }
 
+  checkHitIcon({x, y}) {
+	let it = this.iconPoint
+	return Math.sqrt(Math.pow(it.x - x, 2) + Math.pow(it.y - y, 2)) < it.r
+  }
+
   down = e => {
-	this.mouseHadDown = true
+	if (this.complete) return;
+
 	this.getOffset()
 	let {x, y} = this.getPosition(e)
+
+	if (this.checkHitIcon({x, y})) {
+	  this.fire('refresh')
+	}
+
 	let hitPoint = this.getHitPoint({x, y}) || null
 	if (hitPoint) {
-	  console.log(hitPoint)
 	  if (this.hitPoints.includes(hitPoint)) {
 		return
 	  }
 	  this.hitPoints.push(hitPoint)
+	  this.drawHitMark({index: this.hitPoints.length, x, y})
 	}
 
+	console.log(hitPoint, this.expectText, this.completeText)
 	if (this.completeText.length === this.expectText.length) {
-	  this.fire('complete', this.completeText === this.expectText)
+	  let flag = this.completeText === this.expectText
+	  this.fire('complete', flag)
+	  this.complete = flag
 	}
   }
 

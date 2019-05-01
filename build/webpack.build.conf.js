@@ -13,7 +13,7 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = merge(base, {
   mode: 'production',
-  entry: root('src/package/main.js'),
+  entry: root('src/package/verifyAction.js'),
   output: {
 	path: path.resolve(__dirname, '../lib'),
 	filename: 'verify.js',
@@ -52,6 +52,6 @@ module.exports = merge(base, {
 	new MiniCssExtractPlugin({
 	  filename: 'verify.css',
 	}),
-	// new BundleAnalyzerPlugin(),
+	new BundleAnalyzerPlugin(),
   ],
 });
