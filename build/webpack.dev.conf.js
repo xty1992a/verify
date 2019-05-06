@@ -30,7 +30,7 @@ module.exports = merge(base, {
 	compress: true,
 	hot: true,
 	port: 7779,
-	host: 'localhost',
+	host: '0.0.0.0',
 	publicPath: '/',
 	disableHostCheck: true,
 	proxy: {
